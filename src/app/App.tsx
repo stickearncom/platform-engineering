@@ -11,6 +11,9 @@ import { QuestionsPage } from '@/modules/questions/QuestionsPage';
 import { AssignmentsPage } from '@/modules/assignments/AssignmentsPage';
 import { ReviewsPage } from '@/modules/reviews/ReviewsPage';
 import { ReviewFormPage } from '@/modules/reviews/ReviewFormPage';
+import { EngineerSummaryPage } from '@/modules/insights/EngineerSummaryPage';
+import { DeliveryInsightPage } from '@/modules/insights/DeliveryInsightPage';
+import { PeopleGrowthPage } from '@/modules/insights/PeopleGrowthPage';
 
 export function App() {
   return (
@@ -28,6 +31,9 @@ export function App() {
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/reviews/:id" element={<ReviewFormPage />} />
+          <Route path="/engineer-summary" element={<EngineerSummaryPage />} />
+          <Route path="/delivery-insight" element={<DeliveryInsightPage />} />
+          <Route path="/people-growth" element={<PeopleGrowthPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -10,6 +10,9 @@ import {
   ClipboardList,
   ClipboardCheck,
   LayoutDashboard,
+  BarChart2,
+  Truck,
+  UserCheck,
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -37,6 +40,14 @@ const NAV_GROUPS = [
       { label: 'My Reviews', to: '/reviews', icon: ClipboardCheck },
     ],
   },
+  {
+    label: 'Insights',
+    items: [
+      { label: 'Engineering Summary', to: '/engineer-summary', icon: BarChart2 },
+      { label: 'Delivery Insights',   to: '/delivery-insight',  icon: Truck },
+      { label: 'People Growth',       to: '/people-growth',     icon: UserCheck },
+    ],
+  },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -49,6 +60,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/questions': 'Questions',
   '/assignments': 'Assignments',
   '/reviews': 'My Reviews',
+  '/engineer-summary': 'Engineering Summary',
+  '/delivery-insight': 'Delivery Insights',
+  '/people-growth': 'People Growth',
 };
 
 export function Layout() {
