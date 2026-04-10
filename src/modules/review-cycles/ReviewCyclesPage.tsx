@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BarChart2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useReviewStore } from '@/shared/stores/reviewStore';
 import { useTable } from '@/shared/hooks/useTable';
@@ -8,10 +8,12 @@ import { PageHeader } from '@/shared/components/PageHeader';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DialogFooter } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
+import { CycleResultsTab } from './CycleResultsTab';
 import type { ReviewCycle } from '@/shared/types';
 import type { ReviewType } from '@/shared/types';
 
@@ -26,6 +28,7 @@ export function ReviewCyclesPage() {
   const [editTarget, setEditTarget] = useState<ReviewCycle | null>(null);
   const [form, setForm] = useState<CycleForm>(emptyForm());
   const [deleteTarget, setDeleteTarget] = useState<ReviewCycle | null>(null);
+  const [resultsTarget, setResultsTarget] = useState<ReviewCycle | null>(null);
 
   const table = useTable({
     data: reviewCycles as unknown as Record<string, unknown>[],
@@ -143,6 +146,13 @@ export function ReviewCyclesPage() {
         searchPlaceholder="Search cycles…"
         actions={(item) => (
           <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost" size="icon" className="h-7 w-7 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50"
+              title="View Results"
+              onClick={() => setResultsTarget(item as unknown as ReviewCycle)}
+            >
+              <BarChart2 className="h-3.5 w-3.5" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item as unknown as ReviewCycle)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -214,6 +224,23 @@ export function ReviewCyclesPage() {
         description={`Delete cycle "${deleteTarget?.name}"?`}
         onConfirm={handleDelete}
       />
+
+      {/* Results Dialog */}
+      <Dialog open={!!resultsTarget} onOpenChange={(o) => !o && setResultsTarget(null)}>
+        <DialogContent className="sm:max-w-5xl p-0 overflow-hidden">
+          <div className="flex flex-col max-h-[88vh]">
+            <DialogHeader className="px-6 py-4 border-b shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <BarChart2 className="h-4 w-4 text-indigo-500" />
+                {resultsTarget?.name} — Results
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1">
+              {resultsTarget && <CycleResultsTab cycle={resultsTarget} />}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
