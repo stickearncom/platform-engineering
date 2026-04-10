@@ -13,9 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatDate } from '@/lib/utils';
 import type { ReviewCycle } from '@/shared/types';
+import type { ReviewType } from '@/shared/types';
 
 type CycleForm = Omit<ReviewCycle, 'id'>;
-const emptyForm = (): CycleForm => ({ name: '', startDate: '', endDate: '' });
+const emptyForm = (): CycleForm => ({ name: '', startDate: '', endDate: '', activeReviewTypes: ['self', 'peer'] });
+
+const REVIEW_TYPE_LABELS: Record<ReviewType, string> = { self: 'Self', peer: 'Peer', manager: 'Manager' };
 
 export function ReviewCyclesPage() {
   const { reviewCycles, assignments, addCycle, updateCycle, deleteCycle } = useReviewStore();
@@ -32,13 +35,17 @@ export function ReviewCyclesPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (c: ReviewCycle) => {
     setEditTarget(c);
-    setForm({ name: c.name, startDate: c.startDate, endDate: c.endDate });
+    setForm({ name: c.name, startDate: c.startDate, endDate: c.endDate, activeReviewTypes: c.activeReviewTypes ?? ['self', 'peer'] });
     setModalOpen(true);
   };
 
   const handleSave = () => {
     if (!form.name.trim() || !form.startDate || !form.endDate) {
       toast.error('All fields are required.');
+      return;
+    }
+    if (form.activeReviewTypes.length === 0) {
+      toast.error('Select at least one review type.');
       return;
     }
     if (editTarget) { updateCycle(editTarget.id, form); toast.success('Cycle updated.'); }
@@ -68,6 +75,21 @@ export function ReviewCyclesPage() {
           <div className="flex items-center gap-2">
             <span className="font-medium text-foreground">{c.name}</span>
             {isActive(c) && <Badge variant="success">Active</Badge>}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'activeReviewTypes',
+      label: 'Review Types',
+      render: (item: Record<string, unknown>) => {
+        const c = item as unknown as ReviewCycle;
+        const types = c.activeReviewTypes ?? [];
+        return (
+          <div className="flex gap-1 flex-wrap">
+            {types.map((t) => (
+              <Badge key={t} variant="outline" className="text-xs capitalize">{t}</Badge>
+            ))}
           </div>
         );
       },
@@ -152,6 +174,30 @@ export function ReviewCyclesPage() {
               <div className="grid gap-1.5">
                 <Label>End Date *</Label>
                 <Input type="date" value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Review Types *</Label>
+              <div className="flex gap-4">
+                {(['self', 'peer', 'manager'] as ReviewType[]).map((rt) => (
+                  <div key={rt} className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      id={`rt-${rt}`}
+                      className="h-4 w-4 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+                      checked={form.activeReviewTypes.includes(rt)}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          activeReviewTypes: e.target.checked
+                            ? [...f.activeReviewTypes, rt]
+                            : f.activeReviewTypes.filter((x) => x !== rt),
+                        }))
+                      }
+                    />
+                    <label htmlFor={`rt-${rt}`} className="text-sm cursor-pointer">{REVIEW_TYPE_LABELS[rt]}</label>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

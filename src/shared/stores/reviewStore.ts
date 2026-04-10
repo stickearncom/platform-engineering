@@ -3,8 +3,8 @@ import type { ReviewCycle, ReviewAssignment, ReviewAnswer } from '@/shared/types
 import { generateId } from '@/lib/utils';
 
 const mockCycles: ReviewCycle[] = [
-  { id: 'c1', name: 'Q1 2025 Review', startDate: '2025-01-01', endDate: '2025-03-31' },
-  { id: 'c2', name: 'Q2 2025 Review', startDate: '2025-04-01', endDate: '2025-06-30' },
+  { id: 'c1', name: 'Q1 2025 Review',      startDate: '2025-01-01', endDate: '2025-03-31', activeReviewTypes: ['self', 'peer'] },
+  { id: 'c2', name: 'Q2 2025 Mid-year',    startDate: '2025-04-01', endDate: '2025-06-30', activeReviewTypes: ['self', 'peer', 'manager'] },
 ];
 
 const mockAssignments: ReviewAssignment[] = [

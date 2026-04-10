@@ -16,10 +16,10 @@ import { Input } from '@/components/ui/input';
 import type { Question } from '@/shared/types';
 
 type QuestionForm = Omit<Question, 'id'>;
-const emptyForm = (): QuestionForm => ({ templateId: '', type: 'score', text: '', order: 1 });
+const emptyForm = (): QuestionForm => ({ templateId: '', categoryId: null, type: 'score', text: '', order: 1 });
 
 export function QuestionsPage() {
-  const { questions, templates, addQuestion, updateQuestion, deleteQuestion } = useTemplateStore();
+  const { questions, templates, goalCategories, addQuestion, updateQuestion, deleteQuestion } = useTemplateStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Question | null>(null);
   const [form, setForm] = useState<QuestionForm>(emptyForm());
@@ -33,12 +33,14 @@ export function QuestionsPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (q: Question) => {
     setEditTarget(q);
-    setForm({ templateId: q.templateId, type: q.type, text: q.text, order: q.order });
+    setForm({ templateId: q.templateId, categoryId: q.categoryId, type: q.type, text: q.text, order: q.order });
     setModalOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.text.trim() || !form.templateId) { toast.error('All fields required.'); return; }
+    if (!form.templateId) { toast.error('Template is required.'); return; }
+    if (form.type === 'score' && !form.categoryId) { toast.error('Goal category is required for score questions.'); return; }
+    if (form.type === 'essay' && !form.text.trim()) { toast.error('Question text is required for essay type.'); return; }
     if (editTarget) { updateQuestion(editTarget.id, form); toast.success('Question updated.'); }
     else { addQuestion(form); toast.success('Question added.'); }
     setModalOpen(false);
@@ -52,6 +54,7 @@ export function QuestionsPage() {
   };
 
   const getTemplateName = (id: string) => templates.find((t) => t.id === id)?.name ?? '—';
+  const getCategoryName = (id: string | null) => id ? (goalCategories.find((c) => c.id === id)?.name ?? '—') : '—';
 
   const columns = [
     {
@@ -68,6 +71,13 @@ export function QuestionsPage() {
         <Badge variant={item.type === 'score' ? 'info' : 'secondary'}>
           {item.type === 'score' ? 'Score (1–4)' : 'Essay'}
         </Badge>
+      ),
+    },
+    {
+      key: 'categoryId',
+      label: 'Goal Category',
+      render: (item: Record<string, unknown>) => (
+        <span className="text-sm text-muted-foreground">{getCategoryName(item.categoryId as string)}</span>
       ),
     },
     {
@@ -142,11 +152,24 @@ export function QuestionsPage() {
                   {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            </div>            <div className="grid gap-1.5">
+              <Label>{form.type === 'score' ? 'Goal Category *' : 'Goal Category'}</Label>
+              <Select
+                value={form.categoryId ?? 'none'}
+                onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v === 'none' ? null : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Choose category" /></SelectTrigger>
+                <SelectContent>
+                  {form.type === 'essay' && (
+                    <SelectItem value="none"><span className="text-muted-foreground">None (General / Cross-cutting)</span></SelectItem>
+                  )}
+                  {goalCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>            <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label>Type *</Label>
-                <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as Question['type'] }))}>
+                <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as Question['type'], text: v === 'score' ? '' : f.text }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="score">Score (1–4)</SelectItem>
@@ -159,15 +182,17 @@ export function QuestionsPage() {
                 <Input type="number" min={1} value={form.order} onChange={(e) => setForm((f) => ({ ...f, order: Number(e.target.value) }))} />
               </div>
             </div>
-            <div className="grid gap-1.5">
-              <Label>Question Text *</Label>
-              <Textarea
-                placeholder="Enter the question…"
-                rows={3}
-                value={form.text}
-                onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
-              />
-            </div>
+            {form.type === 'essay' && (
+              <div className="grid gap-1.5">
+                <Label>Question Text *</Label>
+                <Textarea
+                  placeholder="e.g. What do you appreciate most about working with this person?"
+                  rows={3}
+                  value={form.text}
+                  onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>

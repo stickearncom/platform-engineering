@@ -17,16 +17,24 @@ export interface Employee {
   managerId: string | null;
 }
 
+export type ReviewType = 'peer' | 'self' | 'manager';
+export type AssignmentStatus = 'pending' | 'submitted';
+export type QuestionType = 'score' | 'essay';
+
+export interface GoalCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
+
 export interface ReviewCycle {
   id: string;
   name: string;
   startDate: string;
   endDate: string;
+  activeReviewTypes: ReviewType[];
 }
-
-export type ReviewType = 'peer' | 'self' | 'manager';
-export type AssignmentStatus = 'pending' | 'submitted';
-export type QuestionType = 'score' | 'essay';
 
 export interface ReviewAssignment {
   id: string;
@@ -51,6 +59,7 @@ export interface QuestionTemplate {
 export interface Question {
   id: string;
   templateId: string;
+  categoryId: string | null;
   type: QuestionType;
   text: string;
   order: number;
