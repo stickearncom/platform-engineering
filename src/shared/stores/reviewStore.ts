@@ -19,17 +19,17 @@ const mockAssignments: ReviewAssignment[] = [
 ];
 
 const mockAnswers: ReviewAnswer[] = [
-  // a3: e3 reviews e2 (peer)
-  { id: 'ans1', assignmentId: 'a3', questionId: 'q1', scoreValue: 4, textValue: null },
-  { id: 'ans2', assignmentId: 'a3', questionId: 'q2', scoreValue: 4, textValue: null },
-  { id: 'ans3', assignmentId: 'a3', questionId: 'q3', scoreValue: 3, textValue: null },
-  { id: 'ans4', assignmentId: 'a3', questionId: 'q4', scoreValue: null, textValue: 'Bob is an excellent mentor and always willing to unblock others. His code reviews are thorough and educational.' },
-  { id: 'ans5', assignmentId: 'a3', questionId: 'q5', scoreValue: null, textValue: 'Could improve on documentation and communicating project status proactively.' },
-  // a4: e2 self review
-  { id: 'ans6', assignmentId: 'a4', questionId: 'q6', scoreValue: 3, textValue: null },
-  { id: 'ans7', assignmentId: 'a4', questionId: 'q7', scoreValue: 4, textValue: null },
-  { id: 'ans8', assignmentId: 'a4', questionId: 'q8', scoreValue: null, textValue: 'Led the API redesign project that reduced response times by 40%. Mentored two junior engineers.' },
-  { id: 'ans9', assignmentId: 'a4', questionId: 'q9', scoreValue: null, textValue: 'Want to improve my presentation skills and stakeholder communication. Also looking to deepen my Kubernetes expertise.' },
+  // a3: e3 reviews e2 (peer — tmpl1)
+  { id: 'ans1', assignmentId: 'a3', questionId: 'qp1', scoreValue: 4, textValue: null },
+  { id: 'ans2', assignmentId: 'a3', questionId: 'qp2', scoreValue: 4, textValue: null },
+  { id: 'ans3', assignmentId: 'a3', questionId: 'qp3', scoreValue: 3, textValue: null },
+  { id: 'ans4', assignmentId: 'a3', questionId: 'qpe1', scoreValue: null, textValue: 'Bob is an excellent mentor and always willing to unblock others. His code reviews are thorough and educational.' },
+  { id: 'ans5', assignmentId: 'a3', questionId: 'qpe2', scoreValue: null, textValue: 'Could improve on documentation and communicating project status proactively.' },
+  // a4: e2 self review (tmpl2)
+  { id: 'ans6', assignmentId: 'a4', questionId: 'qs1', scoreValue: 3, textValue: null },
+  { id: 'ans7', assignmentId: 'a4', questionId: 'qs2', scoreValue: 4, textValue: null },
+  { id: 'ans8', assignmentId: 'a4', questionId: 'qse1', scoreValue: null, textValue: 'Led the API redesign project that reduced response times by 40%. Mentored two junior engineers.' },
+  { id: 'ans9', assignmentId: 'a4', questionId: 'qse2', scoreValue: null, textValue: 'Want to improve my presentation skills and stakeholder communication. Also looking to deepen my Kubernetes expertise.' },
 ];
 
 interface ReviewStore {

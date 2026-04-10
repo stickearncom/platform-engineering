@@ -13,10 +13,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import type { Question } from '@/shared/types';
+import type { Question, ScoreHints } from '@/shared/types';
 
-type QuestionForm = Omit<Question, 'id'>;
-const emptyForm = (): QuestionForm => ({ templateId: '', categoryId: null, type: 'score', text: '', order: 1 });
+type HintFields = { hint1: string; hint2: string; hint3: string; hint4: string };
+type QuestionForm = Omit<Question, 'id' | 'scoreHints'> & HintFields;
+
+const emptyHints = (): HintFields => ({ hint1: '', hint2: '', hint3: '', hint4: '' });
+const emptyForm = (): QuestionForm => ({ templateId: '', categoryId: null, type: 'score', text: '', order: 1, ...emptyHints() });
+
+const hintsFromQuestion = (q: Question): HintFields => ({
+  hint1: q.scoreHints?.[1] ?? '',
+  hint2: q.scoreHints?.[2] ?? '',
+  hint3: q.scoreHints?.[3] ?? '',
+  hint4: q.scoreHints?.[4] ?? '',
+});
+
+const HINT_LABELS: Record<keyof HintFields, string> = {
+  hint1: '1 — Needs Improvement',
+  hint2: '2 — On Track',
+  hint3: '3 — Exceeds',
+  hint4: '4 — Outstanding',
+};
 
 export function QuestionsPage() {
   const { questions, templates, goalCategories, addQuestion, updateQuestion, deleteQuestion } = useTemplateStore();
@@ -33,7 +50,7 @@ export function QuestionsPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (q: Question) => {
     setEditTarget(q);
-    setForm({ templateId: q.templateId, categoryId: q.categoryId, type: q.type, text: q.text, order: q.order });
+    setForm({ templateId: q.templateId, categoryId: q.categoryId, type: q.type, text: q.text, order: q.order, ...hintsFromQuestion(q) });
     setModalOpen(true);
   };
 
@@ -41,8 +58,14 @@ export function QuestionsPage() {
     if (!form.templateId) { toast.error('Template is required.'); return; }
     if (form.type === 'score' && !form.categoryId) { toast.error('Goal category is required for score questions.'); return; }
     if (form.type === 'essay' && !form.text.trim()) { toast.error('Question text is required for essay type.'); return; }
-    if (editTarget) { updateQuestion(editTarget.id, form); toast.success('Question updated.'); }
-    else { addQuestion(form); toast.success('Question added.'); }
+    const { hint1, hint2, hint3, hint4, ...rest } = form;
+    const anyHint = hint1.trim() || hint2.trim() || hint3.trim() || hint4.trim();
+    const scoreHints: ScoreHints | null = anyHint
+      ? { 1: hint1.trim(), 2: hint2.trim(), 3: hint3.trim(), 4: hint4.trim() }
+      : null;
+    const payload = { ...rest, scoreHints };
+    if (editTarget) { updateQuestion(editTarget.id, payload); toast.success('Question updated.'); }
+    else { addQuestion(payload); toast.success('Question added.'); }
     setModalOpen(false);
   };
 
@@ -191,6 +214,25 @@ export function QuestionsPage() {
                   value={form.text}
                   onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
                 />
+              </div>
+            )}
+            {form.type === 'score' && (
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Score Hints <span className="text-muted-foreground font-normal">(opsional)</span></Label>
+                </div>
+                <div className="grid gap-2">
+                  {(['hint1', 'hint2', 'hint3', 'hint4'] as (keyof HintFields)[]).map((key) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span className="text-[11px] text-muted-foreground w-36 shrink-0">{HINT_LABELS[key]}</span>
+                      <Input
+                        placeholder="Deskripsi singkat…"
+                        value={(form as HintFields)[key]}
+                        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -56,6 +56,8 @@ export interface QuestionTemplate {
   priority: number;
 }
 
+export type ScoreHints = { 1: string; 2: string; 3: string; 4: string };
+
 export interface Question {
   id: string;
   templateId: string;
@@ -63,6 +65,7 @@ export interface Question {
   type: QuestionType;
   text: string;
   order: number;
+  scoreHints?: ScoreHints | null;
 }
 
 export interface ReviewAnswer {

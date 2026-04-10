@@ -245,31 +245,38 @@ export function ReviewFormPage() {
                       </div>
 
                       {q.type === 'score' ? (
-                        <RadioGroup
-                          value={answer?.scoreValue ? String(answer.scoreValue) : ''}
-                          onValueChange={(v) => !isReadonly && setScore(q.id, Number(v))}
-                          className="grid grid-cols-4 gap-2 ml-8"
-                          disabled={isReadonly}
-                        >
-                          {SCORE_OPTS.map(({ value, label }) => (
-                            <div key={value}>
-                              <RadioGroupItem value={String(value)} id={`${q.id}-${value}`} className="sr-only" />
-                              <Label
-                                htmlFor={`${q.id}-${value}`}
-                                className={cn(
-                                  'flex flex-col items-center justify-center h-16 rounded-lg border-2 cursor-pointer transition-all text-center px-1',
-                                  answer?.scoreValue === value
-                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                    : 'border-border bg-white hover:border-indigo-200 text-muted-foreground',
-                                  isReadonly && 'cursor-default',
-                                )}
-                              >
-                                <span className="text-[18px] font-bold leading-none">{value}</span>
-                                <span className="text-[10px] mt-1 leading-tight">{label}</span>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
+                        <div className="ml-8">
+                          <RadioGroup
+                            value={answer?.scoreValue ? String(answer.scoreValue) : ''}
+                            onValueChange={(v) => !isReadonly && setScore(q.id, Number(v))}
+                            className="grid grid-cols-4 gap-2"
+                            disabled={isReadonly}
+                          >
+                            {SCORE_OPTS.map(({ value, label }) => (
+                              <div key={value}>
+                                <RadioGroupItem value={String(value)} id={`${q.id}-${value}`} className="sr-only" />
+                                <Label
+                                  htmlFor={`${q.id}-${value}`}
+                                  className={cn(
+                                    'flex flex-col items-center justify-center h-16 rounded-lg border-2 cursor-pointer transition-all text-center px-1',
+                                    answer?.scoreValue === value
+                                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                      : 'border-border bg-white hover:border-indigo-200 text-muted-foreground',
+                                    isReadonly && 'cursor-default',
+                                  )}
+                                >
+                                  <span className="text-[18px] font-bold leading-none">{value}</span>
+                                  <span className="text-[10px] mt-1 leading-tight">{label}</span>
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                          {q.scoreHints && answer?.scoreValue && (
+                            <p className="mt-2 text-[12px] text-indigo-600/80 italic border-l-2 border-indigo-200 pl-2">
+                              {q.scoreHints[answer.scoreValue as 1 | 2 | 3 | 4]}
+                            </p>
+                          )}
+                        </div>
                       ) : (
                         <div className="ml-8">
                           <Textarea
