@@ -20,7 +20,7 @@ const TYPE_BADGE: Record<string, 'info' | 'purple' | 'orange'> = {
 export function ReviewsPage() {
   const { assignments, getAnswers } = useReviewStore();
   const { employees, roles } = useEmployeeStore();
-  const { templates, questions } = useTemplateStore();
+  const { questions } = useTemplateStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
@@ -29,26 +29,23 @@ export function ReviewsPage() {
     const reviewee = employees.find((e) => e.id === a.revieweeId)?.name ?? '';
     return (
       !search.trim() ||
-      reviewee.toLowerCase().includes(search.toLowerCase()) ||
-      (templates.find((t) => t.id === a.templateId)?.name ?? '')
-        .toLowerCase()
-        .includes(search.toLowerCase())
+      reviewee.toLowerCase().includes(search.toLowerCase())
     );
   });
 
   const pending = filtered.filter((a) => a.status !== 'submitted');
   const submitted = filtered.filter((a) => a.status === 'submitted');
 
-  const getAnsweredCount = (assignmentId: string, templateId: string) => {
+  const getAnsweredCount = (assignmentId: string, reviewType: string) => {
     const answers = getAnswers(assignmentId);
-    const qs = questions.filter((q) => q.templateId === templateId);
+    const qs = questions.filter((q) => q.reviewType === reviewType);
     return { answered: answers.length, total: qs.length };
   };
 
   function ReviewCard({ a }: { a: typeof assignments[number] }) {
     const reviewee = employees.find((e) => e.id === a.revieweeId);
-    const template = templates.find((t) => t.id === a.templateId);
-    const { answered, total } = getAnsweredCount(a.id, a.templateId);
+    const { answered, total } = getAnsweredCount(a.id, a.reviewType);
+    const reviewTypeLabel = a.reviewType.charAt(0).toUpperCase() + a.reviewType.slice(1);
     const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
     const isSubmitted = a.status === 'submitted';
 
@@ -75,7 +72,7 @@ export function ReviewsPage() {
                 {roles.find((r) => r.id === reviewee?.roleId)?.name ?? '—'}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                {template?.name} · Due {formatDate(a.dueDate)}
+                {reviewTypeLabel} Review · Due {formatDate(a.dueDate)}
               </p>
             </div>
           </div>

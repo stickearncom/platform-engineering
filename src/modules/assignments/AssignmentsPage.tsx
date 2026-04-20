@@ -3,7 +3,6 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useReviewStore } from '@/shared/stores/reviewStore';
 import { useEmployeeStore } from '@/shared/stores/employeeStore';
-import { useTemplateStore } from '@/shared/stores/templateStore';
 import { useTable } from '@/shared/hooks/useTable';
 import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -17,23 +16,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDate } from '@/lib/utils';
 import type { ReviewAssignment } from '@/shared/types';
 
-type AssignmentForm = Omit<ReviewAssignment, 'id' | 'status'>;
+type AssignmentForm = Omit<ReviewAssignment, 'id' | 'status' | 'ruleId'>;
 const emptyForm = (): AssignmentForm => ({
   reviewerId: '',
   revieweeId: '',
   reviewType: 'peer',
-  templateId: '',
   cycleId: '',
   dueDate: '',
 });
 
 const statusVariant = { pending: 'warning', submitted: 'success' } as const;
-const typeVariant = { peer: 'info', self: 'secondary', manager: 'warning' } as const;
+const typeVariant = { peer: 'info', self: 'secondary', manager: 'warning', subordinate: 'secondary' } as const;
 
 export function AssignmentsPage() {
   const { assignments, reviewCycles, addAssignment, updateAssignment, deleteAssignment } = useReviewStore();
   const { employees } = useEmployeeStore();
-  const { templates } = useTemplateStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ReviewAssignment | null>(null);
   const [form, setForm] = useState<AssignmentForm>(emptyForm());
@@ -54,12 +51,12 @@ export function AssignmentsPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (a: ReviewAssignment) => {
     setEditTarget(a);
-    setForm({ reviewerId: a.reviewerId, revieweeId: a.revieweeId, reviewType: a.reviewType, templateId: a.templateId, cycleId: a.cycleId, dueDate: a.dueDate });
+    setForm({ reviewerId: a.reviewerId, revieweeId: a.revieweeId, reviewType: a.reviewType, cycleId: a.cycleId, dueDate: a.dueDate });
     setModalOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.reviewerId || !form.revieweeId || !form.templateId || !form.cycleId || !form.dueDate) {
+    if (!form.reviewerId || !form.revieweeId || !form.cycleId || !form.dueDate) {
       toast.error('All fields are required.');
       return;
     }
@@ -67,7 +64,7 @@ export function AssignmentsPage() {
       updateAssignment(editTarget.id, form);
       toast.success('Assignment updated.');
     } else {
-      addAssignment({ ...form, status: 'pending' });
+      addAssignment({ ...form, ruleId: null, status: 'pending' });
       toast.success('Assignment created.');
     }
     setModalOpen(false);
@@ -82,7 +79,6 @@ export function AssignmentsPage() {
 
   const getName = (id: string) => employees.find((e) => e.id === id)?.name ?? '—';
   const getCycleName = (id: string) => reviewCycles.find((c) => c.id === id)?.name ?? '—';
-  const getTemplateName = (id: string) => templates.find((t) => t.id === id)?.name ?? '—';
 
   const columns = [
     {
@@ -112,11 +108,6 @@ export function AssignmentsPage() {
       key: 'cycleId',
       label: 'Cycle',
       render: (item: Record<string, unknown>) => <span className="text-sm">{getCycleName(item.cycleId as string)}</span>,
-    },
-    {
-      key: 'templateId',
-      label: 'Template',
-      render: (item: Record<string, unknown>) => <span className="text-sm text-muted-foreground truncate max-w-[120px] block">{getTemplateName(item.templateId as string)}</span>,
     },
     {
       key: 'dueDate',
@@ -210,15 +201,7 @@ export function AssignmentsPage() {
                     <SelectItem value="peer">Peer</SelectItem>
                     <SelectItem value="self">Self</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Template *</Label>
-                <Select value={form.templateId} onValueChange={(v) => setForm((f) => ({ ...f, templateId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
-                  <SelectContent>
-                    {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    <SelectItem value="subordinate">Subordinate</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

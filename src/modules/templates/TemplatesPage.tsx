@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Pencil, Trash2, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTemplateStore } from '@/shared/stores/templateStore';
-import { useEmployeeStore } from '@/shared/stores/employeeStore';
+import { useQuestionStore } from '@/shared/stores/templateStore';
 import { useTable } from '@/shared/hooks/useTable';
 import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -11,93 +11,98 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { QuestionTemplate } from '@/shared/types';
+import type { GoalCategory, ReviewType } from '@/shared/types';
 
-type TemplateForm = Omit<QuestionTemplate, 'id'>;
-const emptyForm = (): TemplateForm => ({
+type CategoryForm = Omit<GoalCategory, 'id'>;
+const emptyForm = (): CategoryForm => ({
   name: '',
-  reviewType: 'peer',
-  reviewerRoleId: null,
-  revieweeRoleId: null,
-  priority: 1,
+  slug: '',
+  reviewType: null,
+  description: null,
 });
 
-const reviewTypeColor: Record<string, 'info' | 'success' | 'warning'> = {
+const reviewTypeColor: Record<string, 'info' | 'success' | 'warning' | 'secondary'> = {
   peer: 'info',
   self: 'success',
   manager: 'warning',
+  subordinate: 'secondary',
 };
 
-export function TemplatesPage() {
-  const { templates, questions, addTemplate, updateTemplate, deleteTemplate } = useTemplateStore();
-  const { roles } = useEmployeeStore();
+export function GoalCategoriesPage() {
+  const navigate = useNavigate();
+  const { goalCategories, questions, addGoalCategory, updateGoalCategory, deleteGoalCategory } = useQuestionStore();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<QuestionTemplate | null>(null);
-  const [form, setForm] = useState<TemplateForm>(emptyForm());
-  const [deleteTarget, setDeleteTarget] = useState<QuestionTemplate | null>(null);
+  const [editTarget, setEditTarget] = useState<GoalCategory | null>(null);
+  const [form, setForm] = useState<CategoryForm>(emptyForm());
+  const [deleteTarget, setDeleteTarget] = useState<GoalCategory | null>(null);
 
   const table = useTable({
-    data: templates as unknown as Record<string, unknown>[],
-    searchFields: ['name'],
+    data: goalCategories as unknown as Record<string, unknown>[],
+    searchFields: ['name', 'slug'],
   });
 
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
-  const openEdit = (t: QuestionTemplate) => {
-    setEditTarget(t);
-    setForm({ name: t.name, reviewType: t.reviewType, reviewerRoleId: t.reviewerRoleId, revieweeRoleId: t.revieweeRoleId, priority: t.priority });
+  const openEdit = (c: GoalCategory) => {
+    setEditTarget(c);
+    setForm({ name: c.name, slug: c.slug, reviewType: c.reviewType, description: c.description });
     setModalOpen(true);
   };
 
   const handleSave = () => {
     if (!form.name.trim()) { toast.error('Name is required.'); return; }
-    if (editTarget) { updateTemplate(editTarget.id, form); toast.success('Template updated.'); }
-    else { addTemplate(form); toast.success('Template created.'); }
+    if (!form.slug.trim()) { toast.error('Slug is required.'); return; }
+    if (editTarget) { updateGoalCategory(editTarget.id, form); toast.success('Goal category updated.'); }
+    else { addGoalCategory(form); toast.success('Goal category created.'); }
     setModalOpen(false);
   };
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    deleteTemplate(deleteTarget.id);
-    toast.success('Template deleted.');
+    deleteGoalCategory(deleteTarget.id);
+    toast.success('Goal category deleted.');
     setDeleteTarget(null);
   };
 
-  const getRoleName = (id: string | null) => id ? (roles.find((r) => r.id === id)?.name ?? id) : 'Any';
-  const getQuestionCount = (tId: string) => questions.filter((q) => q.templateId === tId).length;
+  const getQuestionCount = (catId: string) => questions.filter((q) => q.categoryId === catId).length;
 
   const columns = [
     {
       key: 'name',
-      label: 'Template Name',
+      label: 'Category Name',
       render: (item: Record<string, unknown>) => (
-        <span className="font-medium text-foreground">{item.name as string}</span>
+        <button
+          className="font-medium text-foreground hover:text-primary hover:underline text-left"
+          onClick={() => navigate(`/goal-categories/${item.id as string}`)}
+        >
+          {item.name as string}
+        </button>
+      ),
+    },
+    {
+      key: 'slug',
+      label: 'Slug',
+      render: (item: Record<string, unknown>) => (
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{item.slug as string}</code>
       ),
     },
     {
       key: 'reviewType',
-      label: 'Type',
+      label: 'Review Type',
+      render: (item: Record<string, unknown>) => {
+        const rt = item.reviewType as ReviewType | null;
+        if (!rt) return <span className="text-xs text-muted-foreground">Universal</span>;
+        return <Badge variant={reviewTypeColor[rt] ?? 'secondary'}>{rt}</Badge>;
+      },
+    },
+    {
+      key: 'description',
+      label: 'Description',
       render: (item: Record<string, unknown>) => (
-        <Badge variant={reviewTypeColor[item.reviewType as string] ?? 'secondary'}>
-          {item.reviewType as string}
-        </Badge>
+        <span className="text-sm text-muted-foreground line-clamp-1">{(item.description as string) ?? '—'}</span>
       ),
-    },
-    {
-      key: 'reviewerRoleId',
-      label: 'Reviewer Role',
-      render: (item: Record<string, unknown>) => <span className="text-sm">{getRoleName(item.reviewerRoleId as string | null)}</span>,
-    },
-    {
-      key: 'revieweeRoleId',
-      label: 'Reviewee Role',
-      render: (item: Record<string, unknown>) => <span className="text-sm">{getRoleName(item.revieweeRoleId as string | null)}</span>,
-    },
-    {
-      key: 'priority',
-      label: 'Priority',
-      render: (item: Record<string, unknown>) => <span className="text-sm font-medium">{item.priority as number}</span>,
     },
     {
       key: 'id',
@@ -111,12 +116,12 @@ export function TemplatesPage() {
   return (
     <div className="p-6">
       <PageHeader
-        title="Templates"
-        description="Define review templates and matching rules"
+        title="Goal Categories"
+        description="Define goal categories that route questions by review type (ERD v6: goal_categories)"
         action={
           <Button onClick={openCreate} size="sm">
             <Plus className="h-4 w-4" />
-            New Template
+            New Category
           </Button>
         }
       />
@@ -133,15 +138,23 @@ export function TemplatesPage() {
         pageSize={table.pageSize}
         setPage={table.setPage}
         setPageSize={table.setPageSize}
-        searchPlaceholder="Search templates…"
+        searchPlaceholder="Search categories…"
         actions={(item) => (
           <div className="flex items-center justify-end gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item as unknown as QuestionTemplate)}>
+            <Button
+              variant="ghost" size="sm"
+              className="h-7 text-xs gap-1 text-muted-foreground"
+              onClick={() => navigate(`/goal-categories/${item.id as string}`)}
+            >
+              Questions
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item as unknown as GoalCategory)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-              onClick={() => setDeleteTarget(item as unknown as QuestionTemplate)}
+              onClick={() => setDeleteTarget(item as unknown as GoalCategory)}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -152,56 +165,54 @@ export function TemplatesPage() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editTarget ? 'Edit Template' : 'New Template'}</DialogTitle>
+            <DialogTitle>{editTarget ? 'Edit Goal Category' : 'New Goal Category'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid gap-1.5">
               <Label>Name *</Label>
-              <Input placeholder="Template name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <Input
+                placeholder="e.g. Delivery & Reliability"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label>Review Type *</Label>
-                <Select value={form.reviewType} onValueChange={(v) => setForm((f) => ({ ...f, reviewType: v as QuestionTemplate['reviewType'] }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="peer">Peer</SelectItem>
-                    <SelectItem value="self">Self</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Priority</Label>
-                <Input type="number" min={1} max={10} value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: Number(e.target.value) }))} />
-              </div>
+            <div className="grid gap-1.5">
+              <Label>Slug *</Label>
+              <Input
+                placeholder="e.g. delivery_reliability"
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label>Reviewer Role</Label>
-                <Select value={form.reviewerRoleId ?? 'any'} onValueChange={(v) => setForm((f) => ({ ...f, reviewerRoleId: v === 'any' ? null : v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any">Any (wildcard)</SelectItem>
-                    {roles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Reviewee Role</Label>
-                <Select value={form.revieweeRoleId ?? 'any'} onValueChange={(v) => setForm((f) => ({ ...f, revieweeRoleId: v === 'any' ? null : v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any">Any (wildcard)</SelectItem>
-                    {roles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-1.5">
+              <Label>Review Type</Label>
+              <Select
+                value={form.reviewType ?? 'universal'}
+                onValueChange={(v) => setForm((f) => ({ ...f, reviewType: v === 'universal' ? null : (v as ReviewType) }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="universal"><span className="text-muted-foreground">Universal (all types)</span></SelectItem>
+                  <SelectItem value="peer">Peer</SelectItem>
+                  <SelectItem value="self">Self</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="subordinate">Subordinate</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Description</Label>
+              <Textarea
+                placeholder="Brief description of this category…"
+                rows={2}
+                value={form.description ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value || null }))}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>{editTarget ? 'Save changes' : 'Create template'}</Button>
+            <Button onClick={handleSave}>{editTarget ? 'Save changes' : 'Create category'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -209,9 +220,12 @@ export function TemplatesPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        description={`Delete template "${deleteTarget?.name}"?`}
+        description="Delete this goal category? Questions linked to it will lose their category."
         onConfirm={handleDelete}
       />
     </div>
   );
 }
+
+/** @deprecated Use GoalCategoriesPage */
+export { GoalCategoriesPage as TemplatesPage };

@@ -7,7 +7,7 @@ import { calculateCycleResults } from '@/lib/scoreCalculator';
 import { Badge } from '@/components/ui/badge';
 import type { ReviewCycle, ReviewType } from '@/shared/types';
 
-const REVIEW_TYPE_LABELS: Record<ReviewType, string> = { self: 'Self', peer: 'Peer', manager: 'Manager' };
+const REVIEW_TYPE_LABELS: Record<ReviewType, string> = { self: 'Self', peer: 'Peer', manager: 'Manager', subordinate: 'Subordinate' };
 
 const CAT_SHORT: Record<string, string> = {
   gc1: 'Delivery',

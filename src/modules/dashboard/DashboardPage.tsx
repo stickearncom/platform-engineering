@@ -20,6 +20,7 @@ const TYPE_VARIANT = {
   peer: 'info',
   self: 'purple',
   manager: 'orange',
+  subordinate: 'secondary',
 } as const;
 
 function StatCard({
@@ -52,7 +53,7 @@ function StatCard({
 export function DashboardPage() {
   const { assignments, reviewCycles } = useReviewStore();
   const { employees } = useEmployeeStore();
-  const { templates } = useTemplateStore();
+  const { goalCategories } = useTemplateStore();
   const navigate = useNavigate();
 
   const total = assignments.length;
@@ -235,7 +236,7 @@ export function DashboardPage() {
                   .filter((a) => a.status !== 'submitted')
                   .map((a) => {
                     const reviewee = employees.find((e) => e.id === a.revieweeId);
-                    const tmpl = templates.find((t) => t.id === a.templateId);
+                    const reviewTypeLabel = a.reviewType.charAt(0).toUpperCase() + a.reviewType.slice(1);
                     return (
                       <div
                         key={a.id}
@@ -245,7 +246,7 @@ export function DashboardPage() {
                           <p className="text-[12px] font-medium text-foreground truncate">
                             {a.reviewType === 'self' ? 'Self Assessment' : reviewee?.name}
                           </p>
-                          <p className="text-[11px] text-muted-foreground truncate">{tmpl?.name}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{reviewTypeLabel} Review</p>
                         </div>
                         <Button
                           size="sm"
@@ -282,8 +283,8 @@ export function DashboardPage() {
                 </span>
               </div>
               <div className="flex justify-between text-[12px]">
-                <span className="text-muted-foreground">Templates</span>
-                <span className="font-medium text-foreground">{templates.length}</span>
+                <span className="text-muted-foreground">Goal Categories</span>
+                <span className="font-medium text-foreground">{goalCategories.length}</span>
               </div>
             </div>
           </div>

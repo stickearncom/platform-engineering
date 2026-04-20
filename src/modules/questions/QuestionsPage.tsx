@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTemplateStore } from '@/shared/stores/templateStore';
+import { useQuestionStore } from '@/shared/stores/templateStore';
 import { useTable } from '@/shared/hooks/useTable';
 import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -13,30 +13,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import type { Question, ScoreHints } from '@/shared/types';
+import type { Question, ReviewType } from '@/shared/types';
 
-type HintFields = { hint1: string; hint2: string; hint3: string; hint4: string };
-type QuestionForm = Omit<Question, 'id' | 'scoreHints'> & HintFields;
+type QuestionForm = Omit<Question, 'id'>;
 
-const emptyHints = (): HintFields => ({ hint1: '', hint2: '', hint3: '', hint4: '' });
-const emptyForm = (): QuestionForm => ({ templateId: '', categoryId: null, type: 'score', text: '', order: 1, ...emptyHints() });
+const emptyForm = (): QuestionForm => ({ reviewType: 'self', categoryId: null, type: 'score', text: '', order: 1 });
 
-const hintsFromQuestion = (q: Question): HintFields => ({
-  hint1: q.scoreHints?.[1] ?? '',
-  hint2: q.scoreHints?.[2] ?? '',
-  hint3: q.scoreHints?.[3] ?? '',
-  hint4: q.scoreHints?.[4] ?? '',
-});
-
-const HINT_LABELS: Record<keyof HintFields, string> = {
-  hint1: '1 — Needs Improvement',
-  hint2: '2 — On Track',
-  hint3: '3 — Exceeds',
-  hint4: '4 — Outstanding',
+const REVIEW_TYPE_LABELS: Record<ReviewType, string> = {
+  peer: 'Peer',
+  self: 'Self',
+  manager: 'Manager',
+  subordinate: 'Subordinate',
 };
 
 export function QuestionsPage() {
-  const { questions, templates, goalCategories, addQuestion, updateQuestion, deleteQuestion } = useTemplateStore();
+  const { questions, goalCategories, addQuestion, updateQuestion, deleteQuestion } = useQuestionStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Question | null>(null);
   const [form, setForm] = useState<QuestionForm>(emptyForm());
@@ -50,22 +41,15 @@ export function QuestionsPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (q: Question) => {
     setEditTarget(q);
-    setForm({ templateId: q.templateId, categoryId: q.categoryId, type: q.type, text: q.text, order: q.order, ...hintsFromQuestion(q) });
+    setForm({ reviewType: q.reviewType, categoryId: q.categoryId, type: q.type, text: q.text, order: q.order });
     setModalOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.templateId) { toast.error('Template is required.'); return; }
     if (form.type === 'score' && !form.categoryId) { toast.error('Goal category is required for score questions.'); return; }
     if (form.type === 'essay' && !form.text.trim()) { toast.error('Question text is required for essay type.'); return; }
-    const { hint1, hint2, hint3, hint4, ...rest } = form;
-    const anyHint = hint1.trim() || hint2.trim() || hint3.trim() || hint4.trim();
-    const scoreHints: ScoreHints | null = anyHint
-      ? { 1: hint1.trim(), 2: hint2.trim(), 3: hint3.trim(), 4: hint4.trim() }
-      : null;
-    const payload = { ...rest, scoreHints };
-    if (editTarget) { updateQuestion(editTarget.id, payload); toast.success('Question updated.'); }
-    else { addQuestion(payload); toast.success('Question added.'); }
+    if (editTarget) { updateQuestion(editTarget.id, form); toast.success('Question updated.'); }
+    else { addQuestion(form); toast.success('Question added.'); }
     setModalOpen(false);
   };
 
@@ -76,7 +60,6 @@ export function QuestionsPage() {
     setDeleteTarget(null);
   };
 
-  const getTemplateName = (id: string) => templates.find((t) => t.id === id)?.name ?? '—';
   const getCategoryName = (id: string | null) => id ? (goalCategories.find((c) => c.id === id)?.name ?? '—') : '—';
 
   const columns = [
@@ -88,11 +71,20 @@ export function QuestionsPage() {
       ),
     },
     {
+      key: 'reviewType',
+      label: 'Review Type',
+      render: (item: Record<string, unknown>) => (
+        <Badge variant={item.reviewType === 'self' ? 'success' : item.reviewType === 'manager' ? 'warning' : item.reviewType === 'subordinate' ? 'secondary' : 'info'}>
+          {REVIEW_TYPE_LABELS[item.reviewType as ReviewType]}
+        </Badge>
+      ),
+    },
+    {
       key: 'type',
       label: 'Type',
       render: (item: Record<string, unknown>) => (
         <Badge variant={item.type === 'score' ? 'info' : 'secondary'}>
-          {item.type === 'score' ? 'Score (1–4)' : 'Essay'}
+          {item.type === 'score' ? 'Score (1–6)' : 'Essay'}
         </Badge>
       ),
     },
@@ -101,13 +93,6 @@ export function QuestionsPage() {
       label: 'Goal Category',
       render: (item: Record<string, unknown>) => (
         <span className="text-sm text-muted-foreground">{getCategoryName(item.categoryId as string)}</span>
-      ),
-    },
-    {
-      key: 'templateId',
-      label: 'Template',
-      render: (item: Record<string, unknown>) => (
-        <span className="text-sm text-muted-foreground">{getTemplateName(item.templateId as string)}</span>
       ),
     },
     {
@@ -124,7 +109,7 @@ export function QuestionsPage() {
     <div className="p-6">
       <PageHeader
         title="Questions"
-        description={`${questions.length} questions across all templates`}
+        description={`${questions.length} questions across all review types`}
         action={
           <Button onClick={openCreate} size="sm">
             <Plus className="h-4 w-4" />
@@ -168,11 +153,14 @@ export function QuestionsPage() {
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid gap-1.5">
-              <Label>Template *</Label>
-              <Select value={form.templateId} onValueChange={(v) => setForm((f) => ({ ...f, templateId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Choose template" /></SelectTrigger>
+              <Label>Review Type *</Label>
+              <Select value={form.reviewType} onValueChange={(v) => setForm((f) => ({ ...f, reviewType: v as ReviewType }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  <SelectItem value="self">Self Review</SelectItem>
+                  <SelectItem value="manager">Manager Review</SelectItem>
+                  <SelectItem value="peer">Peer Review</SelectItem>
+                  <SelectItem value="subordinate">Subordinate Review</SelectItem>
                 </SelectContent>
               </Select>
             </div>            <div className="grid gap-1.5">
@@ -195,7 +183,7 @@ export function QuestionsPage() {
                 <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as Question['type'], text: v === 'score' ? '' : f.text }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="score">Score (1–4)</SelectItem>
+                    <SelectItem value="score">Score (1–6)</SelectItem>
                     <SelectItem value="essay">Essay</SelectItem>
                   </SelectContent>
                 </Select>
@@ -217,23 +205,9 @@ export function QuestionsPage() {
               </div>
             )}
             {form.type === 'score' && (
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label>Score Hints <span className="text-muted-foreground font-normal">(opsional)</span></Label>
-                </div>
-                <div className="grid gap-2">
-                  {(['hint1', 'hint2', 'hint3', 'hint4'] as (keyof HintFields)[]).map((key) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground w-36 shrink-0">{HINT_LABELS[key]}</span>
-                      <Input
-                        placeholder="Deskripsi singkat…"
-                        value={(form as HintFields)[key]}
-                        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground bg-muted px-3 py-2 rounded">
+                Score hints (1–6) are managed per-question in the <strong>Score Hints</strong> page.
+              </p>
             )}
           </div>
           <DialogFooter>

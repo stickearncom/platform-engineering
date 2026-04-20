@@ -4,6 +4,7 @@ import {
   Users,
   UsersRound,
   ShieldCheck,
+  Building2,
   CalendarRange,
   LayoutTemplate,
   HelpCircle,
@@ -21,6 +22,7 @@ const NAV_GROUPS = [
     items: [
       { label: 'Dashboard', to: '/', icon: LayoutDashboard, end: true },
       { label: 'Employees', to: '/employees', icon: Users },
+      { label: 'Divisions', to: '/divisions', icon: Building2 },
       { label: 'Teams', to: '/teams', icon: UsersRound },
       { label: 'Roles', to: '/roles', icon: ShieldCheck },
     ],
@@ -29,7 +31,7 @@ const NAV_GROUPS = [
     label: 'Review Setup',
     items: [
       { label: 'Review Cycles', to: '/review-cycles', icon: CalendarRange },
-      { label: 'Templates', to: '/templates', icon: LayoutTemplate },
+      { label: 'Goal Categories', to: '/goal-categories', icon: LayoutTemplate },
       { label: 'Questions', to: '/questions', icon: HelpCircle },
       { label: 'Assignments', to: '/assignments', icon: ClipboardList },
     ],
@@ -55,8 +57,10 @@ const PAGE_TITLES: Record<string, string> = {
   '/employees': 'Employees',
   '/teams': 'Teams',
   '/roles': 'Roles',
+  '/divisions': 'Divisions',
   '/review-cycles': 'Review Cycles',
-  '/templates': 'Templates',
+  '/goal-categories': 'Goal Categories',
+  '/score-hints': 'Score Hints',
   '/questions': 'Questions',
   '/assignments': 'Assignments',
   '/reviews': 'My Reviews',
@@ -69,6 +73,8 @@ export function Layout() {
   const location = useLocation();
   const title = location.pathname.startsWith('/reviews/')
     ? 'Review Form'
+    : location.pathname.startsWith('/goal-categories/')
+    ? 'Goal Categories'
     : (PAGE_TITLES[location.pathname] ?? 'Engineering Review');
 
   return (

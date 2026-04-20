@@ -20,7 +20,7 @@ import type { ReviewType } from '@/shared/types';
 type CycleForm = Omit<ReviewCycle, 'id'>;
 const emptyForm = (): CycleForm => ({ name: '', startDate: '', endDate: '', activeReviewTypes: ['self', 'peer'] });
 
-const REVIEW_TYPE_LABELS: Record<ReviewType, string> = { self: 'Self', peer: 'Peer', manager: 'Manager' };
+const REVIEW_TYPE_LABELS: Record<ReviewType, string> = { self: 'Self', peer: 'Peer', manager: 'Manager', subordinate: 'Subordinate' };
 
 export function ReviewCyclesPage() {
   const { reviewCycles, assignments, addCycle, updateCycle, deleteCycle } = useReviewStore();
@@ -189,7 +189,7 @@ export function ReviewCyclesPage() {
             <div className="grid gap-2">
               <Label>Review Types *</Label>
               <div className="flex gap-4">
-                {(['self', 'peer', 'manager'] as ReviewType[]).map((rt) => (
+                {(['self', 'peer', 'manager', 'subordinate'] as ReviewType[]).map((rt) => (
                   <div key={rt} className="flex items-center gap-1.5">
                     <input
                       type="checkbox"

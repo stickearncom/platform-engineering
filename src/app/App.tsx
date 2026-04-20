@@ -5,8 +5,11 @@ import { DashboardPage } from '@/modules/dashboard/DashboardPage';
 import { EmployeesPage } from '@/modules/employees/EmployeesPage';
 import { TeamsPage } from '@/modules/teams/TeamsPage';
 import { RolesPage } from '@/modules/roles/RolesPage';
+import { DivisionsPage } from '@/modules/divisions/DivisionsPage';
 import { ReviewCyclesPage } from '@/modules/review-cycles/ReviewCyclesPage';
-import { TemplatesPage } from '@/modules/templates/TemplatesPage';
+import { GoalCategoriesPage } from '@/modules/templates/TemplatesPage';
+import { CategoryDetailPage } from '@/modules/templates/CategoryDetailPage';
+import { ScoreHintsPage } from '@/modules/score-hints/ScoreHintsPage';
 import { QuestionsPage } from '@/modules/questions/QuestionsPage';
 import { AssignmentsPage } from '@/modules/assignments/AssignmentsPage';
 import { ReviewsPage } from '@/modules/reviews/ReviewsPage';
@@ -25,8 +28,11 @@ export function App() {
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/roles" element={<RolesPage />} />
+          <Route path="/divisions" element={<DivisionsPage />} />
           <Route path="/review-cycles" element={<ReviewCyclesPage />} />
-          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/goal-categories" element={<GoalCategoriesPage />} />
+          <Route path="/goal-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="/score-hints" element={<ScoreHintsPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />

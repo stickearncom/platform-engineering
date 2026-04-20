@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Employee, Role, Team } from '@/shared/types';
+import type { Employee, Role, Division, Team } from '@/shared/types';
 import { generateId } from '@/lib/utils';
 
 const mockRoles: Role[] = [
@@ -8,13 +8,25 @@ const mockRoles: Role[] = [
   { id: 'r3', name: 'Software Engineer' },
   { id: 'r4', name: 'Product Manager' },
   { id: 'r5', name: 'UX Designer' },
+  { id: 'r6', name: 'Frontend Engineer' },
+  { id: 'r7', name: 'Backend Engineer' },
+  { id: 'r8', name: 'QA Engineer' },
+  { id: 'r9', name: 'DevOps Engineer' },
+  { id: 'r10', name: 'Data Analyst' },
+  { id: 'r11', name: 'Data Engineer' },
+];
+
+const mockDivisions: Division[] = [
+  { id: 'd1', name: 'Engineering' },
+  { id: 'd2', name: 'Product' },
+  { id: 'd3', name: 'Design' },
 ];
 
 const mockTeams: Team[] = [
-  { id: 't1', name: 'Platform Engineering' },
-  { id: 't2', name: 'Product' },
-  { id: 't3', name: 'Design' },
-  { id: 't4', name: 'DevOps' },
+  { id: 't1', name: 'Platform Engineering', divisionId: 'd1' },
+  { id: 't2', name: 'Product',              divisionId: 'd2' },
+  { id: 't3', name: 'Design',               divisionId: 'd3' },
+  { id: 't4', name: 'DevOps',               divisionId: 'd1' },
 ];
 
 const mockEmployees: Employee[] = [
@@ -35,6 +47,7 @@ const mockEmployees: Employee[] = [
 interface EmployeeStore {
   employees: Employee[];
   roles: Role[];
+  divisions: Division[];
   teams: Team[];
   addEmployee: (employee: Omit<Employee, 'id'>) => void;
   updateEmployee: (id: string, updates: Partial<Omit<Employee, 'id'>>) => void;
@@ -42,6 +55,9 @@ interface EmployeeStore {
   addRole: (role: Omit<Role, 'id'>) => void;
   updateRole: (id: string, updates: Partial<Omit<Role, 'id'>>) => void;
   deleteRole: (id: string) => void;
+  addDivision: (division: Omit<Division, 'id'>) => void;
+  updateDivision: (id: string, updates: Partial<Omit<Division, 'id'>>) => void;
+  deleteDivision: (id: string) => void;
   addTeam: (team: Omit<Team, 'id'>) => void;
   updateTeam: (id: string, updates: Partial<Omit<Team, 'id'>>) => void;
   deleteTeam: (id: string) => void;
@@ -50,6 +66,7 @@ interface EmployeeStore {
 export const useEmployeeStore = create<EmployeeStore>((set) => ({
   employees: mockEmployees,
   roles: mockRoles,
+  divisions: mockDivisions,
   teams: mockTeams,
 
   addEmployee: (employee) =>
@@ -65,6 +82,13 @@ export const useEmployeeStore = create<EmployeeStore>((set) => ({
     set((s) => ({ roles: s.roles.map((r) => (r.id === id ? { ...r, ...updates } : r)) })),
   deleteRole: (id) =>
     set((s) => ({ roles: s.roles.filter((r) => r.id !== id) })),
+
+  addDivision: (division) =>
+    set((s) => ({ divisions: [...s.divisions, { ...division, id: generateId() }] })),
+  updateDivision: (id, updates) =>
+    set((s) => ({ divisions: s.divisions.map((d) => (d.id === id ? { ...d, ...updates } : d)) })),
+  deleteDivision: (id) =>
+    set((s) => ({ divisions: s.divisions.filter((d) => d.id !== id) })),
 
   addTeam: (team) =>
     set((s) => ({ teams: [...s.teams, { ...team, id: generateId() }] })),

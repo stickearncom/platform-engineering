@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useReviewStore } from '@/shared/stores/reviewStore';
 import { useEmployeeStore } from '@/shared/stores/employeeStore';
-import { useTemplateStore } from '@/shared/stores/templateStore';
+import { useQuestionStore } from '@/shared/stores/templateStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,13 +20,15 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import type { ReviewAnswer } from '@/shared/types';
+import type { ReviewAnswer, ScoreValue } from '@/shared/types';
 
 const SCORE_OPTS: { value: number; label: string }[] = [
   { value: 1, label: 'Needs Improvement' },
-  { value: 2, label: 'Meets Expectations' },
-  { value: 3, label: 'Exceeds' },
-  { value: 4, label: 'Outstanding' },
+  { value: 2, label: 'Below Expectations' },
+  { value: 3, label: 'Meets Expectations' },
+  { value: 4, label: 'Exceeds Expectations' },
+  { value: 5, label: 'Significantly Exceeds' },
+  { value: 6, label: 'Outstanding' },
 ];
 
 const TYPE_BADGE: Record<string, 'info' | 'purple' | 'orange'> = {
@@ -41,7 +43,7 @@ export function ReviewFormPage() {
 
   const { assignments, getAnswers, saveAnswers } = useReviewStore();
   const { employees, roles } = useEmployeeStore();
-  const { templates, questions } = useTemplateStore();
+  const { questions, getHintsForQuestion } = useQuestionStore();
 
   const assignment = assignments.find((a) => a.id === id);
   const [answers, setAnswers] = useState<Map<string, Partial<ReviewAnswer>>>(new Map());
@@ -73,15 +75,14 @@ export function ReviewFormPage() {
 
   const reviewee = employees.find((e) => e.id === assignment.revieweeId);
   const reviewer = employees.find((e) => e.id === assignment.reviewerId);
-  const template = templates.find((t) => t.id === assignment.templateId);
   const templateQs = questions
-    .filter((q) => q.templateId === assignment.templateId)
+    .filter((q) => q.reviewType === assignment.reviewType)
     .sort((a, b) => a.order - b.order);
 
   const getRoleName = (id?: string | null) => roles.find((r) => r.id === id)?.name ?? '—';
 
   const setScore = (qId: string, score: number) =>
-    setAnswers((prev) => new Map(prev).set(qId, { ...prev.get(qId), questionId: qId, scoreValue: score, textValue: null }));
+    setAnswers((prev) => new Map(prev).set(qId, { ...prev.get(qId), questionId: qId, scoreValue: score as ScoreValue, textValue: null }));
 
   const setText = (qId: string, text: string) =>
     setAnswers((prev) => new Map(prev).set(qId, { ...prev.get(qId), questionId: qId, textValue: text, scoreValue: null }));
@@ -194,7 +195,7 @@ export function ReviewFormPage() {
             {/* Progress bar */}
             <div className="mt-4 pt-4 border-t border-border">
               <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
-                <span>{template?.name ?? 'Template'}</span>
+                <span className="capitalize">{assignment.reviewType} Review</span>
                 <span className="tabular-nums">{progressPct}%</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
@@ -217,8 +218,8 @@ export function ReviewFormPage() {
               ? Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="bg-card rounded-xl border border-border p-5">
                     <Skeleton className="h-4 w-2/3 mb-4 rounded" />
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4].map((s) => <Skeleton key={s} className="h-16 flex-1 rounded-lg" />)}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[1, 2, 3, 4, 5, 6].map((s) => <Skeleton key={s} className="h-16 flex-1 rounded-lg" />)}
                     </div>
                   </div>
                 ))
@@ -249,7 +250,7 @@ export function ReviewFormPage() {
                           <RadioGroup
                             value={answer?.scoreValue ? String(answer.scoreValue) : ''}
                             onValueChange={(v) => !isReadonly && setScore(q.id, Number(v))}
-                            className="grid grid-cols-4 gap-2"
+                            className="grid grid-cols-3 gap-2"
                             disabled={isReadonly}
                           >
                             {SCORE_OPTS.map(({ value, label }) => (
@@ -271,11 +272,15 @@ export function ReviewFormPage() {
                               </div>
                             ))}
                           </RadioGroup>
-                          {q.scoreHints && answer?.scoreValue && (
-                            <p className="mt-2 text-[12px] text-indigo-600/80 italic border-l-2 border-indigo-200 pl-2">
-                              {q.scoreHints[answer.scoreValue as 1 | 2 | 3 | 4]}
-                            </p>
-                          )}
+                          {answer?.scoreValue && (() => {
+                            const hints = getHintsForQuestion(q.id);
+                            const activeHint = hints.find((h) => h.scoreValue === answer.scoreValue);
+                            return activeHint ? (
+                              <p className="mt-2 text-[12px] text-indigo-600/80 italic border-l-2 border-indigo-200 pl-2">
+                                {activeHint.anchorText}
+                              </p>
+                            ) : null;
+                          })()}
                         </div>
                       ) : (
                         <div className="ml-8">

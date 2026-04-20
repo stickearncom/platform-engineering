@@ -7,6 +7,7 @@ import { DataTable } from '@/shared/components/DataTable';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +17,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Team } from '@/shared/types';
 
+type TeamForm = Omit<Team, 'id'>;
+const emptyForm = (): TeamForm => ({ name: '', divisionId: null });
+
 export function TeamsPage() {
-  const { teams, employees, addTeam, updateTeam, deleteTeam } = useEmployeeStore();
+  const { teams, divisions, employees, addTeam, updateTeam, deleteTeam } = useEmployeeStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Team | null>(null);
-  const [name, setName] = useState('');
+  const [form, setForm] = useState<TeamForm>(emptyForm());
   const [deleteTarget, setDeleteTarget] = useState<Team | null>(null);
 
   const table = useTable({
@@ -30,13 +35,17 @@ export function TeamsPage() {
     searchFields: ['name'],
   });
 
-  const openCreate = () => { setEditTarget(null); setName(''); setModalOpen(true); };
-  const openEdit = (t: Team) => { setEditTarget(t); setName(t.name); setModalOpen(true); };
+  const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setModalOpen(true); };
+  const openEdit = (t: Team) => {
+    setEditTarget(t);
+    setForm({ name: t.name, divisionId: t.divisionId });
+    setModalOpen(true);
+  };
 
   const handleSave = () => {
-    if (!name.trim()) { toast.error('Name is required.'); return; }
-    if (editTarget) { updateTeam(editTarget.id, { name }); toast.success('Team updated.'); }
-    else { addTeam({ name }); toast.success('Team created.'); }
+    if (!form.name.trim()) { toast.error('Name is required.'); return; }
+    if (editTarget) { updateTeam(editTarget.id, form); toast.success('Team updated.'); }
+    else { addTeam(form); toast.success('Team created.'); }
     setModalOpen(false);
   };
 
@@ -48,6 +57,8 @@ export function TeamsPage() {
   };
 
   const getMemberCount = (teamId: string) => employees.filter((e) => e.teamId === teamId).length;
+  const getDivisionName = (id: string | null) =>
+    id ? (divisions.find((d) => d.id === id)?.name ?? '—') : '—';
 
   const columns = [
     {
@@ -56,6 +67,16 @@ export function TeamsPage() {
       render: (item: Record<string, unknown>) => (
         <span className="font-medium text-foreground">{item.name as string}</span>
       ),
+    },
+    {
+      key: 'divisionId',
+      label: 'Division',
+      render: (item: Record<string, unknown>) => {
+        const name = getDivisionName(item.divisionId as string | null);
+        return name !== '—'
+          ? <Badge variant="secondary">{name}</Badge>
+          : <span className="text-sm text-muted-foreground">—</span>;
+      },
     },
     {
       key: 'id',
@@ -112,9 +133,32 @@ export function TeamsPage() {
           <DialogHeader>
             <DialogTitle>{editTarget ? 'Edit Team' : 'Add Team'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-1.5 py-2">
-            <Label>Name *</Label>
-            <Input placeholder="Team name" value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="grid gap-3 py-2">
+            <div className="grid gap-1.5">
+              <Label>Name *</Label>
+              <Input
+                placeholder="Team name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Division</Label>
+              <Select
+                value={form.divisionId ?? 'none'}
+                onValueChange={(v) => setForm((f) => ({ ...f, divisionId: v === 'none' ? null : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select division (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— No division —</SelectItem>
+                  {divisions.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>

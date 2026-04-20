@@ -8,14 +8,14 @@ const mockCycles: ReviewCycle[] = [
 ];
 
 const mockAssignments: ReviewAssignment[] = [
-  { id: 'a1', reviewerId: 'e2', revieweeId: 'e3', reviewType: 'peer', templateId: 'tmpl1', cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
-  { id: 'a2', reviewerId: 'e2', revieweeId: 'e4', reviewType: 'peer', templateId: 'tmpl4', cycleId: 'c1', status: 'pending', dueDate: '2025-03-31' },
-  { id: 'a3', reviewerId: 'e3', revieweeId: 'e2', reviewType: 'peer', templateId: 'tmpl1', cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
-  { id: 'a4', reviewerId: 'e2', revieweeId: 'e2', reviewType: 'self', templateId: 'tmpl2', cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
-  { id: 'a5', reviewerId: 'e1', revieweeId: 'e2', reviewType: 'manager', templateId: 'tmpl3', cycleId: 'c1', status: 'pending', dueDate: '2025-03-31' },
-  { id: 'a6', reviewerId: 'e4', revieweeId: 'e3', reviewType: 'peer', templateId: 'tmpl1', cycleId: 'c2', status: 'pending', dueDate: '2025-06-30' },
-  { id: 'a7', reviewerId: 'e3', revieweeId: 'e3', reviewType: 'self', templateId: 'tmpl2', cycleId: 'c2', status: 'pending', dueDate: '2025-06-30' },
-  { id: 'a8', reviewerId: 'e9', revieweeId: 'e10', reviewType: 'peer', templateId: 'tmpl4', cycleId: 'c2', status: 'pending', dueDate: '2025-06-30' },
+  { id: 'a1', reviewerId: 'e2', revieweeId: 'e3', reviewType: 'peer',    ruleId: null, cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
+  { id: 'a2', reviewerId: 'e2', revieweeId: 'e4', reviewType: 'peer',    ruleId: null, cycleId: 'c1', status: 'pending',   dueDate: '2025-03-31' },
+  { id: 'a3', reviewerId: 'e3', revieweeId: 'e2', reviewType: 'peer',    ruleId: null, cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
+  { id: 'a4', reviewerId: 'e2', revieweeId: 'e2', reviewType: 'self',    ruleId: null, cycleId: 'c1', status: 'submitted', dueDate: '2025-03-31' },
+  { id: 'a5', reviewerId: 'e1', revieweeId: 'e2', reviewType: 'manager', ruleId: null, cycleId: 'c1', status: 'pending',   dueDate: '2025-03-31' },
+  { id: 'a6', reviewerId: 'e4', revieweeId: 'e3', reviewType: 'peer',    ruleId: null, cycleId: 'c2', status: 'pending',   dueDate: '2025-06-30' },
+  { id: 'a7', reviewerId: 'e3', revieweeId: 'e3', reviewType: 'self',    ruleId: null, cycleId: 'c2', status: 'pending',   dueDate: '2025-06-30' },
+  { id: 'a8', reviewerId: 'e9', revieweeId: 'e10', reviewType: 'peer',   ruleId: null, cycleId: 'c2', status: 'pending',   dueDate: '2025-06-30' },
 ];
 
 const mockAnswers: ReviewAnswer[] = [

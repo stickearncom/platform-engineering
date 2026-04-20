@@ -1,6 +1,6 @@
 import type { ReviewType, ReviewAnswer, ReviewAssignment, Question, GoalCategory } from '@/shared/types';
 
-const BASE_WEIGHTS: Record<ReviewType, number> = { self: 0.2, peer: 0.3, manager: 0.5 };
+const BASE_WEIGHTS: Record<ReviewType, number> = { self: 0.2, peer: 0.3, manager: 0.5, subordinate: 0 };
 
 export interface CategoryScoreRow {
   categoryId: string;
